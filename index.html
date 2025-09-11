@@ -1,118 +1,230 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Simulateur Freelance AA</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulateur Freelance - Artiste Auteur</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f7f9fc; margin:0; padding:20px; color:#333; }
-    h1 { text-align:center; margin-bottom:30px; }
-    .container { max-width:800px; margin:0 auto; }
-    .card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-    .card h2 { margin-top:0; font-size:18px; color:#444; }
-    label { display:block; margin:10px 0 5px; }
-    input, select { padding:8px; width:100%; border:1px solid #ccc; border-radius:6px; }
-    button { margin-top:15px; padding:10px 16px; background:#007bff; border:none; border-radius:8px; color:#fff; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    .results { margin-top:20px; }
-    .separator { border-top:1px solid #ddd; margin:15px 0; }
-    .result-line { display:flex; justify-content:space-between; margin:6px 0; }
-    .highlight { font-weight:bold; }
+    :root {
+      --bg: #f9fafb;
+      --card-bg: #fff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --primary: #2563eb;
+      --muted: #6b7280;
+      --radius: 1rem;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .container {
+      display: grid;
+      gap: 2rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 0.75rem;
+      font-size: 1.1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .results {
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+
+    .results p {
+      margin: 0.25rem 0;
+    }
+
+    .separator {
+      border-top: 2px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      body {
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
+  <h1>Simulateur Freelance (Artiste Auteur)</h1>
+  
   <div class="container">
-    <h1>Simulateur Freelance – Artiste Auteur</h1>
-
     <div class="card">
-      <label>Mode de calcul :</label>
-      <select id="modeSelect">
+      <div class="section-title">Paramètres</div>
+      
+      <label for="mode">Mode de calcul</label>
+      <select id="mode">
         <option value="tjm">À partir du TJM</option>
-        <option value="net">À partir du Net annuel</option>
+        <option value="netAnnuel">À partir du Net Annuel</option>
         <option value="mission">Mission ponctuelle</option>
       </select>
 
-      <div id="modeInputs"></div>
-      <button onclick="calculate()">Calculer</button>
-      <div id="result" class="results"></div>
+      <div id="inputs"></div>
+
+      <label for="parts">Nombre de parts fiscales</label>
+      <input type="number" id="parts" value="2.5" step="0.5">
+
+      <label for="tauxIR">Taux de prélèvement à la source (%)</label>
+      <input type="number" id="tauxIR" value="10">
+    </div>
+
+    <div class="card results" id="results">
+      <div class="section-title">Résultats</div>
+      <p>Complétez les paramètres pour voir les résultats.</p>
     </div>
   </div>
 
   <script>
-    const URSSAF_RATE = 0.175;
-    const RAAP_RATE = 0.08;
-    const MOY_SEMAINE_PAR_MOIS = 4.33;
+    const inputsDiv = document.getElementById("inputs");
+    const modeSelect = document.getElementById("mode");
+    const resultsDiv = document.getElementById("results");
 
-    function format(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits:0, maximumFractionDigits:0}); }
-
-    const modeInputsDiv = document.getElementById('modeInputs');
-    const modeSelect = document.getElementById('modeSelect');
-
-    function renderInputs(){
-      const mode = modeSelect.value;
-      let html = '';
-      html += '<label>Parts fiscales</label><input type="number" step="0.5" id="partsFiscales" value="2.5">';
-      html += '<label>Taux prélèvement à la source (%)</label><input type="number" step="0.1" id="tauxIR" value="10">';
-
-      if(mode==='tjm'){
-        html = '<label>TJM (€)</label><input type="number" id="tjmInput" value="500">'
-             + '<label>Jours facturés/an</label><input type="number" id="joursAnInput" value="175">'
-             + html;
-      } else if(mode==='net'){
-        html = '<label>Net annuel souhaité (€)</label><input type="number" id="netAnnuelInput" value="60000">' + html;
-      } else if(mode==='mission'){
-        html = '<label>TJM (€)</label><input type="number" id="tjmMission" value="500">'
-             + '<label>Rythme facturé (jours/semaine)</label><input type="number" step="0.1" id="rythmeMission" value="3">'
-             + '<label>Ou nombre total de jours facturés</label><input type="number" id="joursMission">'
-             + html;
+    function renderInputs() {
+      let html = "";
+      if (modeSelect.value === "tjm") {
+        html = `
+          <label for="tjm">TJM (€)</label>
+          <input type="number" id="tjm" value="500">
+          <label for="jours">Jours facturés par an</label>
+          <input type="number" id="jours" value="175">
+        `;
+      } else if (modeSelect.value === "netAnnuel") {
+        html = `
+          <label for="netAnnuel">Net Annuel Souhaité (€)</label>
+          <input type="number" id="netAnnuel" value="40000">
+          <label for="jours">Jours facturés par an</label>
+          <input type="number" id="jours" value="175">
+        `;
+      } else if (modeSelect.value === "mission") {
+        html = `
+          <label for="tjm">TJM (€)</label>
+          <input type="number" id="tjm" value="500">
+          <label for="rythme">Rythme facturé (jours/semaine)</label>
+          <input type="number" id="rythme" value="3">
+          <label for="totalJours">Nombre total de jours facturés</label>
+          <input type="number" id="totalJours" value="20">
+        `;
       }
-      modeInputsDiv.innerHTML = html;
+      inputsDiv.innerHTML = html;
     }
 
-    modeSelect.addEventListener('change', renderInputs);
+    function calculate() {
+      const mode = modeSelect.value;
+      const parts = parseFloat(document.getElementById("parts").value);
+      const tauxIR = parseFloat(document.getElementById("tauxIR").value) / 100;
+
+      let brut = 0, joursFactures = 0;
+
+      if (mode === "tjm") {
+        const tjm = parseFloat(document.getElementById("tjm").value);
+        joursFactures = parseFloat(document.getElementById("jours").value);
+        brut = tjm * joursFactures;
+      } else if (mode === "netAnnuel") {
+        const netAnnuel = parseFloat(document.getElementById("netAnnuel").value);
+        joursFactures = parseFloat(document.getElementById("jours").value);
+        brut = netAnnuel / (1 - 0.175 - 0.08);
+      } else if (mode === "mission") {
+        const tjm = parseFloat(document.getElementById("tjm").value);
+        const rythme = parseFloat(document.getElementById("rythme").value);
+        const totalJours = parseFloat(document.getElementById("totalJours").value);
+        joursFactures = totalJours > 0 ? totalJours : rythme * 4;
+        brut = tjm * joursFactures;
+      }
+
+      const urssaf = brut * 0.175;
+      const raap = brut * 0.08;
+      const netAvantIR = brut - urssaf - raap;
+      const impot = netAvantIR * tauxIR / parts;
+      const netApresIR = netAvantIR - impot;
+
+      let html = `
+        <p><strong>Chiffre d’affaires brut :</strong> ${brut.toFixed(0)} €</p>
+        <p>Charges sociales URSSAF (17,5%) : -${urssaf.toFixed(0)} €</p>
+        <p>RAAP (8%) : -${raap.toFixed(0)} €</p>
+        <p><strong>Net avant IR :</strong> ${netAvantIR.toFixed(0)} €</p>
+        <div class="separator"></div>
+        <p>Taux de prélèvement à la source : ${(tauxIR * 100).toFixed(1)} %</p>
+        <p>Nombre de parts fiscales : ${parts}</p>
+        <p>Impôt estimé : -${impot.toFixed(0)} €</p>
+        <p><strong>Net après IR :</strong> ${netApresIR.toFixed(0)} €</p>
+      `;
+
+      if (joursFactures > 21) {
+        const mensuelAvantIR = netAvantIR / (joursFactures / 21);
+        const mensuelApresIR = netApresIR / (joursFactures / 21);
+        html += `
+          <div class="separator"></div>
+          <p><strong>Mensuel net avant IR :</strong> ${mensuelAvantIR.toFixed(0)} €</p>
+          <p><strong>Mensuel net après IR :</strong> ${mensuelApresIR.toFixed(0)} €</p>
+        `;
+      }
+
+      resultsDiv.innerHTML = `<div class="section-title">Résultats</div>` + html;
+    }
+
+    modeSelect.addEventListener("change", () => {
+      renderInputs();
+      calculate();
+    });
+
+    inputsDiv.addEventListener("input", calculate);
+    document.getElementById("parts").addEventListener("input", calculate);
+    document.getElementById("tauxIR").addEventListener("input", calculate);
+
     renderInputs();
-
-    function calculate(){
-      const mode = modeSelect.value;
-      const parts = parseFloat(document.getElementById('partsFiscales').value);
-      const tauxIR = parseFloat(document.getElementById('tauxIR').value)/100;
-      let ca=0, cotisations=0, raap=0, netAvantIR=0, impot=0, netApresIR=0, joursTotal=0;
-
-      if(mode==='tjm'){
-        const tjm = parseFloat(document.getElementById('tjmInput').value);
-        const jours = parseFloat(document.getElementById('joursAnInput').value);
-        joursTotal = jours;
-        ca = tjm*jours;
-      } else if(mode==='net'){
-        const netAnnuel = parseFloat(document.getElementById('netAnnuelInput').value);
-        ca = netAnnuel/(1-URSSAF_RATE-RAAP_RATE)/1.15;
-        joursTotal = 175;
-      } else if(mode==='mission'){
-        const tjm = parseFloat(document.getElementById('tjmMission').value);
-        const rythme = parseFloat(document.getElementById('rythmeMission').value);
-        const jours = parseFloat(document.getElementById('joursMission').value);
-        joursTotal = jours || rythme*MOY_SEMAINE_PAR_MOIS;
-        ca = tjm*joursTotal;
-      }
-
-      const assiette = ca*1.15;
-      cotisations = assiette*URSSAF_RATE;
-      raap = assiette*RAAP_RATE;
-      netAvantIR = ca - cotisations - raap;
-      impot = netAvantIR * tauxIR;
-      netApresIR = netAvantIR - impot;
-
-      const netMensuel = netAvantIR/joursTotal* (joursTotal>21 ? 21 : joursTotal);
-
-      document.getElementById('result').innerHTML = `
-        <div class='result-line'><span>CA brut :</span><span>${format(ca)} €</span></div>
-        <div class='result-line'><span>Charges sociales URSSAF (17,5%) :</span><span>- ${format(cotisations)} €</span></div>
-        <div class='result-line'><span>RAAP (8%) :</span><span>- ${format(raap)} €</span></div>
-        <div class='result-line highlight'><span>Net avant IR :</span><span>${format(netAvantIR)} €</span></div>
-        <div class='result-line highlight'><span>Net mensuel approximatif :</span><span>${format(netMensuel)} €</span></div>
-        <div class='separator'></div>
-        <div class='result-line'><span>Prélèvement à la source (${(tauxIR*100).toFixed(1)}%) :</span><span>- ${format(impot)} €</span></div>
-        <div class='result-line highlight'><span>Net après IR :</span><span>${format(netApresIR)} €</span></div>`;
-    }
+    calculate();
   </script>
 </body>
 </html>
+
