@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulateur Freelance AA</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f9fc; margin:0; padding:20px; color:#333; }
+    h1 { text-align:center; margin-bottom:30px; }
+    .container { max-width:800px; margin:0 auto; }
+    .card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+    .card h2 { margin-top:0; font-size:18px; color:#444; }
+    label { display:block; margin:10px 0 5px; }
+    input, select { padding:8px; width:100%; border:1px solid #ccc; border-radius:6px; }
+    button { margin-top:15px; padding:10px 16px; background:#007bff; border:none; border-radius:8px; color:#fff; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    .results { margin-top:20px; }
+    .separator { border-top:1px solid #ddd; margin:15px 0; }
+    .result-line { display:flex; justify-content:space-between; margin:6px 0; }
+    .highlight { font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulateur Freelance – Artiste Auteur</h1>
+
+    <div class="card">
+      <label>Mode de calcul :</label>
+      <select id="modeSelect">
+        <option value="tjm">À partir du TJM</option>
+        <option value="net">À partir du Net annuel</option>
+        <option value="mission">Mission ponctuelle</option>
+      </select>
+
+      <div id="modeInputs"></div>
+      <button onclick="calculate()">Calculer</button>
+      <div id="result" class="results"></div>
+    </div>
+  </div>
+
+  <script>
+    const URSSAF_RATE = 0.175;
+    const RAAP_RATE = 0.08;
+    const MOY_SEMAINE_PAR_MOIS = 4.33;
+
+    function format(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+    const modeInputsDiv = document.getElementById('modeInputs');
+    const modeSelect = document.getElementById('modeSelect');
+
+    function renderInputs(){
+      const mode = modeSelect.value;
+      let html = '';
+      html += '<label>Parts fiscales</label><input type="number" step="0.5" id="partsFiscales" value="2.5">';
+      html += '<label>Taux prélèvement à la source (%)</label><input type="number" step="0.1" id="tauxIR" value="10">';
+
+      if(mode==='tjm'){
+        html = '<label>TJM (€)</label><input type="number" id="tjmInput" value="500">'
+             + '<label>Jours facturés/an</label><input type="number" id="joursAnInput" value="175">'
+             + html;
+      } else if(mode==='net'){
+        html = '<label>Net annuel souhaité (€)</label><input type="number" id="netAnnuelInput" value="60000">' + html;
+      } else if(mode==='mission'){
+        html = '<label>TJM (€)</label><input type="number" id="tjmMission" value="500">'
+             + '<label>Rythme facturé (jours/semaine)</label><input type="number" step="0.1" id="rythmeMission" value="3">'
+             + '<label>Ou nombre total de jours facturés</label><input type="number" id="joursMission">'
+             + html;
+      }
+      modeInputsDiv.innerHTML = html;
+    }
+
+    modeSelect.addEventListener('change', renderInputs);
+    renderInputs();
+
+    function calculate(){
+      const mode = modeSelect.value;
+      const parts = parseFloat(document.getElementById('partsFiscales').value);
+      const tauxIR = parseFloat(document.getElementById('tauxIR').value)/100;
+      let ca=0, cotisations=0, raap=0, netAvantIR=0, impot=0, netApresIR=0, joursTotal=0;
+
+      if(mode==='tjm'){
+        const tjm = parseFloat(document.getElementById('tjmInput').value);
+        const jours = parseFloat(document.getElementById('joursAnInput').value);
+        joursTotal = jours;
+        ca = tjm*jours;
+      } else if(mode==='net'){
+        const netAnnuel = parseFloat(document.getElementById('netAnnuelInput').value);
+        ca = netAnnuel/(1-URSSAF_RATE-RAAP_RATE)/1.15;
+        joursTotal = 175;
+      } else if(mode==='mission'){
+        const tjm = parseFloat(document.getElementById('tjmMission').value);
+        const rythme = parseFloat(document.getElementById('rythmeMission').value);
+        const jours = parseFloat(document.getElementById('joursMission').value);
+        joursTotal = jours || rythme*MOY_SEMAINE_PAR_MOIS;
+        ca = tjm*joursTotal;
+      }
+
+      const assiette = ca*1.15;
+      cotisations = assiette*URSSAF_RATE;
+      raap = assiette*RAAP_RATE;
+      netAvantIR = ca - cotisations - raap;
+      impot = netAvantIR * tauxIR;
+      netApresIR = netAvantIR - impot;
+
+      const netMensuel = netAvantIR/joursTotal* (joursTotal>21 ? 21 : joursTotal);
+
+      document.getElementById('result').innerHTML = `
+        <div class='result-line'><span>CA brut :</span><span>${format(ca)} €</span></div>
+        <div class='result-line'><span>Charges sociales URSSAF (17,5%) :</span><span>- ${format(cotisations)} €</span></div>
+        <div class='result-line'><span>RAAP (8%) :</span><span>- ${format(raap)} €</span></div>
+        <div class='result-line highlight'><span>Net avant IR :</span><span>${format(netAvantIR)} €</span></div>
+        <div class='result-line highlight'><span>Net mensuel approximatif :</span><span>${format(netMensuel)} €</span></div>
+        <div class='separator'></div>
+        <div class='result-line'><span>Prélèvement à la source (${(tauxIR*100).toFixed(1)}%) :</span><span>- ${format(impot)} €</span></div>
+        <div class='result-line highlight'><span>Net après IR :</span><span>${format(netApresIR)} €</span></div>`;
+    }
+  </script>
+</body>
+</html>
