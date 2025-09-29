@@ -393,7 +393,7 @@
                 <!-- TJM -->
                 <div class="form-group" id="tjmGroup">
                     <label class="form-label" for="tjm" id="tjmLabel">TJM HT (€)</label>
-                    <input type="number" class="form-input" id="tjm" min="0" step="10" value="550">
+                    <input type="number" class="form-input" id="tjm" min="0" step="10" value="400">
                 </div>
 
                 <!-- Net annuel souhaité (hidden by default) -->
@@ -414,11 +414,11 @@
                         <label class="form-label">Type de mission</label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input type="radio" id="missionByWeek" name="missionType" value="byWeek" >
+                                <input type="radio" id="missionByWeek" name="missionType" value="byWeek" checked>
                                 <label for="missionByWeek">Rythme/semaine</label>
                             </div>
                             <div class="radio-option">
-                                <input type="radio" id="missionByTotal" name="missionType" value="byTotal" checked>
+                                <input type="radio" id="missionByTotal" name="missionType" value="byTotal">
                                 <label for="missionByTotal">Total de jours</label>
                             </div>
                         </div>
@@ -738,13 +738,22 @@
 
         // Mise à jour du label TJM selon le statut TVA
         function updateTJMLabel() {
-    if (vatEnabled.checked) {
-        tjmLabel.textContent = 'TJM TTC (€)';
-    } else {
-        tjmLabel.textContent = 'TJM HT (€)';
-    }
-}
-
+            const currentTJM = parseFloat(tjm.value) || 0;
+            
+            if (vatEnabled.checked) {
+                tjmLabel.textContent = 'TJM TTC (€)';
+                // Si on vient d'activer la TVA, ajouter 20% au TJM
+                if (currentTJM > 0) {
+                    tjm.value = Math.round(currentTJM * 1.2);
+                }
+            } else {
+                tjmLabel.textContent = 'TJM HT (€)';
+                // Si on vient de désactiver la TVA, retirer 20% au TJM
+                if (currentTJM > 0) {
+                    tjm.value = Math.round(currentTJM / 1.2);
+                }
+            }
+        }
 
         // Calcul des charges déductibles
         function calculateChargesDeductibles() {
@@ -884,12 +893,20 @@
 
         // Calculs principaux
         function calculateFromTJM() {
-    const tjmHT = parseFloat(tjm.value) || 0;
-    const days = parseFloat(daysPerYear.value) || 0;
-
-    // TVA sera calculée séparément dans calculateResults
-    return tjmHT * days;
-}
+            const tjmValue = parseFloat(tjm.value) || 0;
+            const days = parseFloat(daysPerYear.value) || 0;
+            
+            // Si TVA activée, le TJM affiché est TTC, il faut calculer le HT
+            if (vatEnabled.checked) {
+                // TJM TTC = TJM HT × 1.2
+                // Donc TJM HT = TJM TTC ÷ 1.2
+                const tjmHT = tjmValue / 1.2;
+                return tjmHT * days;
+            } else {
+                // Si TVA désactivée, le TJM saisi est HT
+                return tjmValue * days;
+            }
+        }
 
         function calculateFromMission() {
             const tjmValue = parseFloat(tjm.value) || 0;
@@ -904,11 +921,15 @@
             }
 
             // Si TVA activée, le TJM affiché est TTC
-            let tjmHT = parseFloat(tjm.value) || 0; // ne jamais diviser par 1.2
-return {
-    revenue: tjmHT * totalDaysWorked,
-    days: totalDaysWorked
-};
+            let tjmHT = tjmValue;
+            if (vatEnabled.checked) {
+                tjmHT = tjmValue / 1.2;
+            }
+
+            return {
+                revenue: tjmHT * totalDaysWorked,
+                days: totalDaysWorked
+            };
         }
 
         function calculateFromNetAnnual() {
@@ -1019,7 +1040,7 @@ return {
                     break;
             }
             
-            const vat = vatEnabled.checked ? caHT * FISCAL_RATES.VAT : 0;
+            const results = calculateResults(revenueBrutHT, totalDays);
             
             // Mise à jour de l'affichage
             document.getElementById('resultRevenueBrut').textContent = formatCurrency(results.revenueBrut);
