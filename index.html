@@ -384,9 +384,9 @@
                 <div class="form-group">
                     <label class="form-label" for="calculationMode">Mode de calcul</label>
                     <select class="form-select" id="calculationMode">
+                        <option value="mission">Mission ponctuelle</option>
                         <option value="tjm">TJM + jours facturés/an</option>
                         <option value="netAnnual">Revenu net annuel souhaité</option>
-                        <option value="mission">Mission ponctuelle</option>
                     </select>
                 </div>
 
@@ -443,7 +443,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="sourceRate">Taux de prélèvement à la source (%)</label>
-                    <input type="number" class="form-input" id="sourceRate" min="0" max="45" step="0.1" value="8.5">
+                    <input type="number" class="form-input" id="sourceRate" min="0" max="45" step="0.1" value="13">
                 </div>
 
                 <!-- TVA Switch -->
@@ -896,9 +896,10 @@
             const tjmValue = parseFloat(tjm.value) || 0;
             const days = parseFloat(daysPerYear.value) || 0;
             
-            // Le TJM est toujours considéré comme HT dans les calculs internes
-            // Si TVA activée, on considère que l'utilisateur a saisi du TTC
+            // Si TVA activée, le TJM affiché est TTC, il faut calculer le HT
             if (vatEnabled.checked) {
+                // TJM TTC = TJM HT × 1.2
+                // Donc TJM HT = TJM TTC ÷ 1.2
                 const tjmHT = tjmValue / 1.2;
                 return tjmHT * days;
             } else {
@@ -919,7 +920,7 @@
                 totalDaysWorked = parseFloat(totalDays.value) || 0;
             }
 
-            // Si TVA activée, on considère que l'utilisateur a saisi du TTC
+            // Si TVA activée, le TJM affiché est TTC
             let tjmHT = tjmValue;
             if (vatEnabled.checked) {
                 tjmHT = tjmValue / 1.2;
@@ -951,12 +952,15 @@
         }
 
         function calculateResults(revenueBrutHT, totalDays = null) {
-            // Le revenu brut HT est passé en paramètre
+            // Le revenu brut HT est le CA HT (base de calcul)
             const caHT = revenueBrutHT;
             
-            // Calcul de la TVA et du CA TTC si TVA activée
+            // Calcul de la TVA : 20% du CA HT
+            // TVA = CA HT × 20%
             const vat = vatEnabled.checked ? caHT * FISCAL_RATES.VAT : 0;
-            const revenueBrutTTC = caHT + vat;
+            
+            // CA Brut (TTC) = CA HT + TVA
+            const caBrut = caHT + vat;
             
             const sourceRateValue = parseFloat(sourceRate.value) || 0;
             const fiscalPartsValue = parseFloat(fiscalParts.value) || 1;
@@ -991,7 +995,7 @@
             const netApresProvisions = netApresIR - provisionConges - epargneRetraite;
             
             return {
-                revenueBrut: revenueBrutTTC, // Pour l'affichage, on montre le TTC
+                revenueBrut: caBrut, // CA Brut TTC pour l'affichage
                 vat,
                 caHT,
                 urssaf,
@@ -1092,7 +1096,7 @@
             daysPerWeek.value = '3';
             totalDays.value = '60';
             fiscalParts.value = '2.5';
-            sourceRate.value = '8.5';
+            sourceRate.value = '13';
             vatEnabled.checked = true;
             fraisReelsAmount.value = '5000';
             chargesDeductiblesEnabled.checked = false;
