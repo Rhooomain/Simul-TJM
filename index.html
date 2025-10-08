@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Simulateur Freelance Artiste Auteur</title>
     <style>
-        /* === (UI conservée) === */
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -58,7 +57,8 @@
 
         .results-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; }
         .results-section { margin-bottom:24px; }
-        .results-section-title { font-size:1.1rem; font-weight:600; margin-bottom:16px; opacity:0.9; }
+        .results-section-title { font-size:1.1rem; font-weight:600; margin-bottom:8px; opacity:0.9; display:flex; align-items:baseline; gap:10px; }
+        .monthly-label { font-size:0.85rem; opacity:0.9; font-weight:500; background: rgba(255,255,255,0.06); padding:4px 8px; border-radius:6px; }
         .result-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.2); }
         .result-label { font-size:0.9rem; opacity:0.9; }
         .result-value { font-weight:600; font-size:1rem; }
@@ -376,15 +376,17 @@
 
                 <!-- Résultats mensuels (si applicable) -->
                 <div class="results-section" id="monthlyResults">
-                    <h3 class="results-section-title">📅 Revenus mensuels</h3>
+                    <h3 class="results-section-title">📅 Revenus mensuels
+                        <span id="monthlyLabel" class="monthly-label">—</span>
+                    </h3>
                     
                     <div class="result-item">
-                        <span class="result-label">Net mensuel avant impôts</span>
+                        <span class="result-label" id="labelMonthlyNetAvant">Net mensuel avant impôts</span>
                         <span class="result-value euro" id="resultMonthlyNetAvant">0 €</span>
                     </div>
                     
                     <div class="result-item">
-                        <span class="result-label">Net mensuel après impôts</span>
+                        <span class="result-label" id="labelMonthlyNetApres">Net mensuel après impôts</span>
                         <span class="result-value euro" id="resultMonthlyNetApres">0 €</span>
                     </div>
                 </div>
@@ -474,6 +476,11 @@
         const calculsAvancesResults = document.getElementById('calculsAvancesResults');
         const alertsContainer = document.getElementById('alertsContainer');
 
+        const monthlyResults = document.getElementById('monthlyResults');
+        const monthlyLabel = document.getElementById('monthlyLabel');
+        const labelMonthlyNetAvant = document.getElementById('labelMonthlyNetAvant');
+        const labelMonthlyNetApres = document.getElementById('labelMonthlyNetApres');
+
         // utils
         function formatCurrency(amount) {
             return new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', minimumFractionDigits:0, maximumFractionDigits:0 }).format(Math.round(amount));
@@ -556,7 +563,6 @@
         }
 
         function updateMissionType() {
-            // we show weekly & total inputs and the months dropdown is always available within missionGroup
             if (missionByWeek.checked) {
                 weeklyRateGroup.classList.remove('hidden');
                 totalDaysGroup.classList.add('hidden');
@@ -601,7 +607,7 @@
                 const daysWeek = parseFloat(daysPerWeek.value) || 0;
                 totalDaysWorked = daysWeek * months * weeksPerMonthVal;
             } else {
-                // NOTE: here we interpret totalDays input as "jours par mois" when months dropdown is applied
+                // totalDays interpreted as days per month when months dropdown is applied
                 const daysPerMonthValue = parseFloat(totalDays.value) || 0;
                 totalDaysWorked = daysPerMonthValue * months;
             }
@@ -669,28 +675,42 @@
             };
         }
 
+        // UPDATED updateResults with dynamic monthly label
         function updateResults() {
             let revenueBrutHT = 0;
             let totalDays = null;
             const mode = calculationMode.value;
+            // monthsForMonthly = nombre de mois pris en compte pour calculer le net "mensuel"
+            let monthsForMonthly = null;
 
-            if (mode === 'tjm') {
-                revenueBrutHT = calculateFromTJM();
-                totalDays = parseFloat(daysPerYear.value) || 0;
-            } else if (mode === 'netAnnual') {
-                revenueBrutHT = calculateFromNetAnnual();
-                totalDays = parseFloat(daysPerYear.value) || 0;
-                let calculatedTJM = totalDays > 0 ? revenueBrutHT / totalDays : 0;
-                if (vatEnabled.checked) calculatedTJM = calculatedTJM * 1.2;
-                document.getElementById('tjm').value = Math.round(calculatedTJM);
-            } else if (mode === 'mission') {
-                const missionResult = calculateFromMission();
-                revenueBrutHT = missionResult.revenue;
-                totalDays = missionResult.days;
+            switch(mode) {
+                case 'tjm':
+                    revenueBrutHT = calculateFromTJM();
+                    totalDays = parseFloat(daysPerYear.value) || 0;
+                    monthsForMonthly = 12; // annual -> diviser par 12
+                    break;
+                case 'netAnnual':
+                    revenueBrutHT = calculateFromNetAnnual();
+                    totalDays = parseFloat(daysPerYear.value) || 0;
+                    monthsForMonthly = 12; // annual -> diviser par 12
+
+                    // Mettre à jour le TJM calculé (affichage approximatif)
+                    // calcul: TJM = CA annuel HT / jours facturés par an
+                    let calculatedTJM = (totalDays > 0) ? (revenueBrutHT / totalDays) : 0;
+                    if (vatEnabled.checked) calculatedTJM = calculatedTJM * 1.2;
+                    document.getElementById('tjm').value = Math.round(calculatedTJM);
+                    break;
+                case 'mission':
+                    const missionResult = calculateFromMission();
+                    revenueBrutHT = missionResult.revenue;
+                    totalDays = missionResult.days;
+                    monthsForMonthly = parseInt(missionMonths.value) || 1; // on divise par le nombre de mois de la mission
+                    break;
             }
 
             const results = calculateResults(revenueBrutHT, totalDays);
 
+            // Mise à jour de l'affichage standard
             document.getElementById('resultRevenueBrut').textContent = formatCurrency(results.revenueBrut);
             document.getElementById('resultVAT').textContent = formatCurrency(results.vat);
             document.getElementById('resultCAHT').textContent = formatCurrency(results.caHT);
@@ -701,27 +721,49 @@
             document.getElementById('resultImpot').textContent = formatCurrency(results.impot);
             document.getElementById('resultNetApresIR').textContent = formatCurrency(results.netApresIR);
 
+            // Calculs avancés
             if (calculsAvancesEnabled.checked) {
                 document.getElementById('resultProvisionConges').textContent = formatCurrency(results.provisionConges);
                 document.getElementById('resultEpargneRetraite').textContent = formatCurrency(results.epargneRetraite);
                 document.getElementById('resultNetApresProvisions').textContent = formatCurrency(results.netApresProvisions);
             }
 
-            document.getElementById('displaySourceRate').textContent = formatPercentage(parseFloat(sourceRate.value)/100);
+            // Affichage des paramètres fiscaux
+            document.getElementById('displaySourceRate').textContent = formatPercentage(parseFloat(sourceRate.value) / 100);
             document.getElementById('displayFiscalParts').textContent = fiscalParts.value;
 
+            // Affichage/masquage de la TVA
             const vatResult = document.getElementById('vatResult');
-            if (vatEnabled.checked) vatResult.style.display = 'flex'; else vatResult.style.display = 'none';
-
-            const monthlyResults = document.getElementById('monthlyResults');
-            if (totalDays && totalDays > 21) {
-                monthlyResults.classList.remove('hidden');
-                document.getElementById('resultMonthlyNetAvant').textContent = formatCurrency(results.netAvantIR / 12);
-                document.getElementById('resultMonthlyNetApres').textContent = formatCurrency(results.netApresIR / 12);
+            if (vatEnabled.checked) {
+                vatResult.style.display = 'flex';
             } else {
-                monthlyResults.classList.add('hidden');
+                vatResult.style.display = 'none';
             }
 
+            // --- REVENUS MENSUELS : correctifs + libellé dynamique ---
+            // On affiche les résultats mensuels seulement si on a un totalDays correct ET un nombre de mois pertinent
+            if (monthsForMonthly && monthsForMonthly > 0 && totalDays && totalDays > 0) {
+                monthlyResults.classList.remove('hidden');
+
+                // Calcul mensuel : on divise les montants nets par monthsForMonthly
+                const monthlyNetAvant = results.netAvantIR / monthsForMonthly;
+                const monthlyNetApres = results.netApresIR / monthsForMonthly;
+
+                document.getElementById('resultMonthlyNetAvant').textContent = formatCurrency(monthlyNetAvant);
+                document.getElementById('resultMonthlyNetApres').textContent = formatCurrency(monthlyNetApres);
+
+                // Libellé dynamique : indique le nombre de mois utilisés
+                if (mode === 'mission') {
+                    monthlyLabel.textContent = `sur ${monthsForMonthly} mois (mission)`;
+                } else {
+                    monthlyLabel.textContent = `sur 12 mois (annualisé)`;
+                }
+            } else {
+                monthlyResults.classList.add('hidden');
+                monthlyLabel.textContent = '—';
+            }
+
+            // Mise à jour des charges déductibles et alertes
             updateChargesDeductiblesDisplay();
             updateAlerts(results);
         }
