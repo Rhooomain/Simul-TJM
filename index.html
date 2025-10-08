@@ -5,91 +5,367 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Simulateur Freelance Artiste Auteur</title>
     <style>
-        /* === (UI conservée) === */
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height:100vh;
-            padding:20px;
-            color:#2d3748;
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
         }
-        .container { max-width:1400px; margin:0 auto; }
-        .header { text-align:center; margin-bottom:40px; color:white; }
-        .header h1 { font-size:2.5rem; font-weight:700; margin-bottom:8px; }
-        .header p { font-size:1.1rem; opacity:0.9; }
-        .main-grid { display:grid; grid-template-columns:1fr; gap:30px; }
-        @media(min-width:768px){ .main-grid { grid-template-columns:1fr 1fr; } }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         .card {
-            background:white; border-radius:16px; padding:32px;
-            box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-            border:1px solid rgba(255,255,255,0.1);
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .card-title { font-size:1.5rem; font-weight:700; margin-bottom:24px; color:#1a202c; }
-        .form-group { margin-bottom:20px; }
-        .form-label { display:block; font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:6px; }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #1a202c;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
         .form-input, .form-select {
-            width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:8px; font-size:1rem; transition:all .2s; background:white;
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
         }
-        .form-input:focus, .form-select:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
-        .form-input:hover, .form-select:hover { border-color:#d1d5db; }
 
-        /* switch */
-        .switch-container { display:flex; align-items:center; gap:12px; }
-        .switch { position:relative; width:48px; height:24px; }
-        .switch input { opacity:0; width:0; height:0; }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input:hover, .form-select:hover {
+            border-color: #d1d5db;
+        }
+
+        /* Switch Toggle */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .switch-slider {
-            position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#e5e7eb; transition:.3s; border-radius:24px;
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: 0.3s;
+            border-radius: 24px;
         }
+
         .switch-slider:before {
-            position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; transition:.3s; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.2);
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .switch input:checked + .switch-slider { background:#667eea; }
-        .switch input:checked + .switch-slider:before { transform:translateX(24px); }
-        .switch-label { font-size:0.875rem; font-weight:500; color:#374151; }
 
-        .radio-group { display:flex; gap:20px; margin-top:8px; }
-        .radio-option { display:flex; align-items:center; gap:8px; }
-        .radio-option input[type="radio"] { width:18px; height:18px; accent-color:#667eea; }
-        .radio-option label { font-size:0.875rem; font-weight:500; cursor:pointer; }
+        .switch input:checked + .switch-slider {
+            background-color: #667eea;
+        }
 
-        .conditional-input { margin-top:12px; opacity:1; max-height:none; overflow:visible; transition:all .3s; }
-        .conditional-input.hidden { opacity:0; max-height:0; overflow:hidden; }
+        .switch input:checked + .switch-slider:before {
+            transform: translateX(24px);
+        }
 
-        .results-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; }
-        .results-section { margin-bottom:24px; }
-        .results-section-title { font-size:1.1rem; font-weight:600; margin-bottom:16px; opacity:0.9; }
-        .result-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.2); }
-        .result-label { font-size:0.9rem; opacity:0.9; }
-        .result-value { font-weight:600; font-size:1rem; }
-        .result-highlight { background: rgba(255,255,255,0.1); margin:8px -16px; padding:12px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); }
-        .separator { height:2px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); margin:20px 0; }
+        .switch-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
 
+        /* Radio buttons for IR calculation */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .radio-option label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Conditional inputs */
+        .conditional-input {
+            margin-top: 12px;
+            opacity: 1;
+            max-height: none;
+            overflow: visible;
+            transition: all 0.3s ease;
+        }
+
+        .conditional-input.hidden {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        /* Results card */
+        .results-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .results-section {
+            margin-bottom: 24px;
+        }
+
+        .results-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .results-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .result-highlight {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 8px -16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-highlight .result-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .separator {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            margin: 20px 0;
+        }
+
+        /* Reset button */
         .reset-button {
-            width:100%; padding:14px 20px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color:white; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; margin-top:20px;
-        }
-        .reset-button:hover { transform:translateY(-1px); box-shadow:0 10px 20px rgba(255,107,107,0.3); }
-        .reset-button:active { transform:translateY(0); }
-
-        .info-badge { background:#eff6ff; border:1px solid #3b82f6; color:#1e40af; padding:12px 16px; border-radius:8px; font-size:0.875rem; margin-top:16px; }
-        .info-text { font-size:0.75rem; color:#6b7280; margin-top:4px; }
-
-        .alert-box { padding:12px 16px; border-radius:8px; margin-top:16px; font-size:0.875rem; display:flex; align-items:center; gap:8px; }
-        .alert-warning { background:#fef3c7; border:1px solid #f59e0b; color:#92400e; }
-        .alert-info { background:#eff6ff; border:1px solid #3b82f6; color:#1e40af; }
-        .alert-success { background:#d1fae5; border:1px solid #10b981; color:#047857; }
-        .alert-icon { font-size:1rem; font-weight:bold; }
-
-        @media (max-width:767px) {
-            .container { padding:0 10px; }
-            .header h1 { font-size:2rem; }
-            .card { padding:24px; }
-            .radio-group { flex-direction:column; gap:12px; }
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
         }
 
-        .hidden { display:none; }
-        .euro { color:#10b981; }
-        .text-red { color:#ef4444; }
+        .reset-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .reset-button:active {
+            transform: translateY(0);
+        }
+
+        /* Info badge */
+        .info-badge {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-top: 16px;
+        }
+
+        .info-text {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .alert-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #047857;
+        }
+
+        .alert-icon {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 767px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none;
+        }
+
+        .euro {
+            color: #10b981;
+        }
+
+        .text-red {
+            color: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -153,16 +429,16 @@
                         <input type="number" class="form-input" id="daysPerWeek" min="0.5" max="7" step="0.5" value="3">
                     </div>
 
-                    <div class="form-group" id="totalDaysGroup">
-                        <label class="form-label" for="totalDays">Nombre total de jours facturés (par mois)</label>
+                    <div class="form-group hidden" id="totalDaysGroup">
+                        <label class="form-label" for="totalDays">Nombre total de jours facturés</label>
                         <input type="number" class="form-input" id="totalDays" min="1" value="60">
-                        <div class="info-text">Interprété comme <em>jours par mois</em> quand la durée en mois est appliquée.</div>
                     </div>
 
                     <!-- Nouveau : nombre de mois (1-12) -->
                     <div class="form-group" id="missionMonthsGroup">
                         <label class="form-label" for="missionMonths">Durée (mois)</label>
                         <select class="form-select" id="missionMonths">
+                            <!-- options 1..12 injected via JS for concision, fallback below -->
                             <option value="1">1 mois</option>
                             <option value="2">2 mois</option>
                             <option value="3">3 mois</option>
@@ -176,14 +452,7 @@
                             <option value="11">11 mois</option>
                             <option value="12">12 mois</option>
                         </select>
-                        <div class="info-text">Utilisé pour estimer la durée (appliqué pour les deux types : Rythme/semaine et Total de jours).</div>
-                    </div>
-
-                    <!-- Nouveau : possibilité d'ajuster la moyenne semaines/mois -->
-                    <div class="form-group" id="weeksPerMonthGroup">
-                        <label class="form-label" for="weeksPerMonth">Semaines par mois (moyenne)</label>
-                        <input type="number" class="form-input" id="weeksPerMonth" step="0.001" min="1" max="5" value="4.333">
-                        <div class="info-text">Moyenne utilisée : 4,333 semaines/mois par défaut. Modifie si tu veux une autre convention.</div>
+                        <div class="info-text">Utilisé pour estimer la durée quand vous choisissez "Rythme/semaine".</div>
                     </div>
                 </div>
 
@@ -423,17 +692,17 @@
     <script>
         // Constantes fiscales 2025
         const FISCAL_RATES = {
-            URSSAF_AA: 0.175,
-            RAAP: 0.08,
-            VAT: 0.20,
-            ABATTEMENT: 0.34,
-            SEUIL_TVA: 47700,
-            BAREME_KM_2025: 0.518,
-            PROVISION_CONGES: 0.10,
-            EPARGNE_RETRAITE: 0.15
+            URSSAF_AA: 0.175,  // 17,5%
+            RAAP: 0.08,        // 8%
+            VAT: 0.20,         // 20%
+            ABATTEMENT: 0.34,  // 34%
+            SEUIL_TVA: 47700,  // Seuil franchise TVA prestations de services
+            BAREME_KM_2025: 0.518, // Barème kilométrique 2025 (< 5000km)
+            PROVISION_CONGES: 0.10, // 10% pour congés payés
+            EPARGNE_RETRAITE: 0.15  // 15% recommandé pour épargne retraite
         };
 
-        // DOM
+        // Éléments DOM
         const calculationMode = document.getElementById('calculationMode');
         const tjm = document.getElementById('tjm');
         const tjmLabel = document.getElementById('tjmLabel');
@@ -449,20 +718,23 @@
         const calculsAvancesEnabled = document.getElementById('calculsAvancesEnabled');
         const resetButton = document.getElementById('resetButton');
 
+        // Nouveaux éléments pour charges déductibles
         const fraisFormation = document.getElementById('fraisFormation');
         const materielInfo = document.getElementById('materielInfo');
         const fraisDeplacementKm = document.getElementById('fraisDeplacementKm');
         const abonnementsLogiciels = document.getElementById('abonnementsLogiciels');
         const fraisBureau = document.getElementById('fraisBureau');
 
+        // Radio buttons
         const abattement = document.getElementById('abattement');
         const fraisReels = document.getElementById('fraisReels');
         const missionByWeek = document.getElementById('missionByWeek');
         const missionByTotal = document.getElementById('missionByTotal');
 
+        // Mission months dropdown
         const missionMonths = document.getElementById('missionMonths');
-        const weeksPerMonth = document.getElementById('weeksPerMonth');
 
+        // Groupes conditionnels
         const tjmGroup = document.getElementById('tjmGroup');
         const netAnnualGroup = document.getElementById('netAnnualGroup');
         const daysPerYearGroup = document.getElementById('daysPerYearGroup');
@@ -474,25 +746,34 @@
         const calculsAvancesResults = document.getElementById('calculsAvancesResults');
         const alertsContainer = document.getElementById('alertsContainer');
 
-        // utils
+        // Fonctions utilitaires
         function formatCurrency(amount) {
-            return new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', minimumFractionDigits:0, maximumFractionDigits:0 }).format(Math.round(amount));
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount));
         }
+
         function formatPercentage(rate) {
             return (rate * 100).toFixed(1) + '%';
         }
 
-        // label TJM update when TVA toggled
+        // Mise à jour du label TJM selon le statut TVA
         function updateTJMLabel() {
             const currentTJM = parseFloat(tjm.value) || 0;
+            
             if (vatEnabled.checked) {
                 tjmLabel.textContent = 'TJM TTC (€)';
+                // Si on vient d'activer la TVA, ajouter 20% au TJM (conversion affichage)
                 if (currentTJM > 0 && !tjm.dataset.tvaConverted) {
                     tjm.value = Math.round(currentTJM * 1.2);
                     tjm.dataset.tvaConverted = "true";
                 }
             } else {
                 tjmLabel.textContent = 'TJM HT (€)';
+                // Si on vient de désactiver la TVA, retirer 20% au TJM
                 if (currentTJM > 0 && tjm.dataset.tvaConverted === "true") {
                     tjm.value = Math.round(currentTJM / 1.2);
                     delete tjm.dataset.tvaConverted;
@@ -500,63 +781,108 @@
             }
         }
 
-        // charges déductibles
+        // Calcul des charges déductibles
         function calculateChargesDeductibles() {
             if (!chargesDeductiblesEnabled.checked) return 0;
+            
             const formation = parseFloat(fraisFormation.value) || 0;
-            const materiel = (parseFloat(materielInfo.value) || 0) / 3;
+            const materiel = (parseFloat(materielInfo.value) || 0) / 3; // Amortissement sur 3 ans
             const km = (parseFloat(fraisDeplacementKm.value) || 0) * FISCAL_RATES.BAREME_KM_2025;
             const logiciels = parseFloat(abonnementsLogiciels.value) || 0;
             const bureau = parseFloat(fraisBureau.value) || 0;
+            
             return formation + materiel + km + logiciels + bureau;
         }
+
+        // Mise à jour affichage charges déductibles
         function updateChargesDeductiblesDisplay() {
             const total = calculateChargesDeductibles();
             document.getElementById('totalChargesDeductibles').textContent = formatCurrency(total);
         }
 
-        // alerts
+        // Gestion des alertes et conseils
         function updateAlerts(results) {
             const alerts = [];
+            
+            // Alerte seuil TVA
             if (!vatEnabled.checked && results.revenueBrut > FISCAL_RATES.SEUIL_TVA) {
                 const depassement = results.revenueBrut - FISCAL_RATES.SEUIL_TVA;
-                alerts.push({ type:'warning', icon:'⚠️', message:`Attention : CA ${formatCurrency(results.revenueBrut)} > seuil TVA (${formatCurrency(FISCAL_RATES.SEUIL_TVA)}). Dépassement : ${formatCurrency(depassement)}. Activez la TVA !` });
+                alerts.push({
+                    type: 'warning',
+                    icon: '⚠️',
+                    message: `Attention : CA ${formatCurrency(results.revenueBrut)} > seuil TVA (${formatCurrency(FISCAL_RATES.SEUIL_TVA)}). Dépassement : ${formatCurrency(depassement)}. Activez la TVA !`
+                });
             }
+            
+            // Conseil seuil TVA
             if (vatEnabled.checked && results.revenueBrut < FISCAL_RATES.SEUIL_TVA * 0.8) {
-                alerts.push({ type:'info', icon:'💡', message:`Conseil : Votre CA est sous le seuil TVA. Vous pourriez désactiver la TVA et économiser ${formatCurrency(results.vat)}.` });
+                alerts.push({
+                    type: 'info',
+                    icon: '💡',
+                    message: `Conseil : Votre CA est sous le seuil TVA. Vous pourriez désactiver la TVA et économiser ${formatCurrency(results.vat)}.`
+                });
             }
+            
+            // Rappels déclarations
             if (results.revenueBrut > 10000) {
-                alerts.push({ type:'info', icon:'📅', message:'Rappel : Déclarations trimestrielles URSSAF et déclaration annuelle des revenus avant mai.' });
+                alerts.push({
+                    type: 'info',
+                    icon: '📅',
+                    message: 'Rappel : Déclarations trimestrielles URSSAF et déclaration annuelle des revenus avant mai.'
+                });
             }
+            
+            // Optimisation fiscale
             if (results.revenusImposables > 30000 && abattement.checked) {
                 const chargesCalculees = calculateChargesDeductibles();
                 const abattementActuel = results.caHT * FISCAL_RATES.ABATTEMENT;
                 if (chargesCalculees > abattementActuel * 1.2) {
-                    alerts.push({ type:'success', icon:'💰', message:`Optimisation : Vos frais réels (${formatCurrency(chargesCalculees)}) dépassent l'abattement (${formatCurrency(abattementActuel)}). Activez les frais réels !` });
+                    alerts.push({
+                        type: 'success',
+                        icon: '💰',
+                        message: `Optimisation : Vos frais réels (${formatCurrency(chargesCalculees)}) dépassent l'abattement (${formatCurrency(abattementActuel)}). Activez les frais réels !`
+                    });
                 }
             }
-            alertsContainer.innerHTML = alerts.map(a => `<div class="alert-box alert-${a.type}"><span class="alert-icon">${a.icon}</span><span>${a.message}</span></div>`).join('');
+            
+            // Affichage des alertes
+            alertsContainer.innerHTML = alerts.map(alert => 
+                `<div class="alert-box alert-${alert.type}">
+                    <span class="alert-icon">${alert.icon}</span>
+                    <span>${alert.message}</span>
+                </div>`
+            ).join('');
         }
 
-        // visibility by mode
+        // Gestion des modes de calcul
         function updateVisibilityBasedOnMode() {
             const mode = calculationMode.value;
+            
+            // Reset visibility
             tjmGroup.classList.remove('hidden');
             netAnnualGroup.classList.add('hidden');
             daysPerYearGroup.classList.remove('hidden');
             missionGroup.classList.add('hidden');
-            if (mode === 'netAnnual') {
-                netAnnualGroup.classList.remove('hidden');
-                tjmGroup.classList.add('hidden');
-            } else if (mode === 'mission') {
-                daysPerYearGroup.classList.add('hidden');
-                missionGroup.classList.remove('hidden');
-                updateMissionType();
+
+            switch(mode) {
+                case 'tjm':
+                    // TJM + jours/an - configuration par défaut
+                    break;
+                case 'netAnnual':
+                    // Net annuel souhaité
+                    netAnnualGroup.classList.remove('hidden');
+                    tjmGroup.classList.add('hidden');
+                    break;
+                case 'mission':
+                    // Mission ponctuelle
+                    daysPerYearGroup.classList.add('hidden');
+                    missionGroup.classList.remove('hidden');
+                    updateMissionType();
+                    break;
             }
         }
 
         function updateMissionType() {
-            // we show weekly & total inputs and the months dropdown is always available within missionGroup
             if (missionByWeek.checked) {
                 weeklyRateGroup.classList.remove('hidden');
                 totalDaysGroup.classList.add('hidden');
@@ -567,26 +893,43 @@
         }
 
         function updateIRCalculation() {
-            if (fraisReels.checked) fraisReelsInput.classList.remove('hidden'); else fraisReelsInput.classList.add('hidden');
+            if (fraisReels.checked) {
+                fraisReelsInput.classList.remove('hidden');
+            } else {
+                fraisReelsInput.classList.add('hidden');
+            }
         }
 
         function updateChargesDeductiblesVisibility() {
-            if (chargesDeductiblesEnabled.checked) chargesDeductiblesGroup.classList.remove('hidden'); else chargesDeductiblesGroup.classList.add('hidden');
+            if (chargesDeductiblesEnabled.checked) {
+                chargesDeductiblesGroup.classList.remove('hidden');
+            } else {
+                chargesDeductiblesGroup.classList.add('hidden');
+            }
             updateChargesDeductiblesDisplay();
         }
 
         function updateCalculsAvancesVisibility() {
-            if (calculsAvancesEnabled.checked) calculsAvancesResults.classList.remove('hidden'); else calculsAvancesResults.classList.add('hidden');
+            if (calculsAvancesEnabled.checked) {
+                calculsAvancesResults.classList.remove('hidden');
+            } else {
+                calculsAvancesResults.classList.add('hidden');
+            }
         }
 
         // Calculs principaux
         function calculateFromTJM() {
             const tjmValue = parseFloat(tjm.value) || 0;
             const days = parseFloat(daysPerYear.value) || 0;
+            
+            // Si TVA activée, le TJM affiché est TTC, il faut calculer le HT
             if (vatEnabled.checked) {
+                // TJM TTC = TJM HT × 1.2
+                // Donc TJM HT = TJM TTC ÷ 1.2
                 const tjmHT = tjmValue / 1.2;
                 return tjmHT * days;
             } else {
+                // Si TVA désactivée, le TJM saisi est HT
                 return tjmValue * days;
             }
         }
@@ -594,20 +937,21 @@
         function calculateFromMission() {
             const tjmValue = parseFloat(tjm.value) || 0;
             let totalDaysWorked = 0;
-            const months = parseInt(missionMonths.value) || 1;
-            const weeksPerMonthVal = parseFloat(weeksPerMonth.value) || 4.333;
 
             if (missionByWeek.checked) {
                 const daysWeek = parseFloat(daysPerWeek.value) || 0;
-                totalDaysWorked = daysWeek * months * weeksPerMonthVal;
+                const months = parseInt(missionMonths.value) || 1;
+                // Estimation : semaines par mois = 4.333
+                totalDaysWorked = daysWeek * months * 4.333;
             } else {
-                // NOTE: here we interpret totalDays input as "jours par mois" when months dropdown is applied
-                const daysPerMonthValue = parseFloat(totalDays.value) || 0;
-                totalDaysWorked = daysPerMonthValue * months;
+                totalDaysWorked = parseFloat(totalDays.value) || 0;
             }
 
+            // Si TVA activée, le TJM affiché est TTC
             let tjmHT = tjmValue;
-            if (vatEnabled.checked) tjmHT = tjmValue / 1.2;
+            if (vatEnabled.checked) {
+                tjmHT = tjmValue / 1.2;
+            }
 
             return {
                 revenue: tjmHT * totalDaysWorked,
@@ -616,44 +960,69 @@
         }
 
         function calculateFromNetAnnual() {
+            // Calcul inverse : à partir du net souhaité, estimer le CA nécessaire
             const netTarget = parseFloat(netAnnualTarget.value) || 0;
             const days = parseFloat(daysPerYear.value) || 200;
-            let caEstime = netTarget / 0.65;
-            for (let i=0;i<10;i++){
+            
+            // Estimation par itération simple
+            let caEstime = netTarget / 0.65; // Estimation initiale (35% de charges environ)
+            
+            for (let i = 0; i < 10; i++) {
                 const simulation = calculateResults(caEstime, days);
                 const ecart = simulation.netApresIR - netTarget;
+                
                 if (Math.abs(ecart) < 100) break;
-                caEstime -= ecart * 0.8;
+                caEstime -= ecart * 0.8; // Facteur de convergence
             }
+            
             return caEstime;
         }
 
         function calculateResults(revenueBrutHT, totalDays = null) {
+            // Le revenu brut HT est le CA HT (base de calcul)
             const caHT = revenueBrutHT;
+            
+            // Calcul de la TVA : 20% du CA HT
+            // TVA = CA HT × 20%
             const vat = vatEnabled.checked ? caHT * FISCAL_RATES.VAT : 0;
+            
+            // CA Brut (TTC) = CA HT + TVA
             const caBrut = caHT + vat;
+            
             const sourceRateValue = parseFloat(sourceRate.value) || 0;
+            const fiscalPartsValue = parseFloat(fiscalParts.value) || 1;
+            
+            // Cotisations sociales (calculées sur le HT)
             const urssaf = caHT * FISCAL_RATES.URSSAF_AA;
             const raap = caHT * FISCAL_RATES.RAAP;
             const netAvantIR = caHT - urssaf - raap;
-
+            
+            // Calcul des revenus imposables
             let revenusImposables;
             if (abattement.checked) {
                 revenusImposables = caHT * (1 - FISCAL_RATES.ABATTEMENT);
             } else {
                 let frais = parseFloat(fraisReelsAmount.value) || 0;
-                if (chargesDeductiblesEnabled.checked) frais += calculateChargesDeductibles();
+                
+                // Ajouter les charges déductibles détaillées si activées
+                if (chargesDeductiblesEnabled.checked) {
+                    frais += calculateChargesDeductibles();
+                }
+                
                 revenusImposables = Math.max(0, caHT - frais);
             }
-
+            
+            // Impôt (simplifié avec le taux de prélèvement à la source)
             const impot = revenusImposables * sourceRateValue / 100;
             const netApresIR = netAvantIR - impot;
+            
+            // Calculs avancés (provisions)
             const provisionConges = netAvantIR * FISCAL_RATES.PROVISION_CONGES;
             const epargneRetraite = netAvantIR * FISCAL_RATES.EPARGNE_RETRAITE;
             const netApresProvisions = netApresIR - provisionConges - epargneRetraite;
-
+            
             return {
-                revenueBrut: caBrut,
+                revenueBrut: caBrut, // CA Brut TTC pour l'affichage
                 vat,
                 caHT,
                 urssaf,
@@ -672,25 +1041,35 @@
         function updateResults() {
             let revenueBrutHT = 0;
             let totalDays = null;
+            
             const mode = calculationMode.value;
-
-            if (mode === 'tjm') {
-                revenueBrutHT = calculateFromTJM();
-                totalDays = parseFloat(daysPerYear.value) || 0;
-            } else if (mode === 'netAnnual') {
-                revenueBrutHT = calculateFromNetAnnual();
-                totalDays = parseFloat(daysPerYear.value) || 0;
-                let calculatedTJM = totalDays > 0 ? revenueBrutHT / totalDays : 0;
-                if (vatEnabled.checked) calculatedTJM = calculatedTJM * 1.2;
-                document.getElementById('tjm').value = Math.round(calculatedTJM);
-            } else if (mode === 'mission') {
-                const missionResult = calculateFromMission();
-                revenueBrutHT = missionResult.revenue;
-                totalDays = missionResult.days;
+            
+            switch(mode) {
+                case 'tjm':
+                    revenueBrutHT = calculateFromTJM();
+                    totalDays = parseFloat(daysPerYear.value) || 0;
+                    break;
+                case 'netAnnual':
+                    revenueBrutHT = calculateFromNetAnnual();
+                    totalDays = parseFloat(daysPerYear.value) || 0;
+                    // Mettre à jour le TJM calculé
+                    let calculatedTJM = totalDays > 0 ? revenueBrutHT / totalDays : 0;
+                    // Si TVA activée, afficher le TTC
+                    if (vatEnabled.checked) {
+                        calculatedTJM = calculatedTJM * 1.2;
+                    }
+                    document.getElementById('tjm').value = Math.round(calculatedTJM);
+                    break;
+                case 'mission':
+                    const missionResult = calculateFromMission();
+                    revenueBrutHT = missionResult.revenue;
+                    totalDays = missionResult.days;
+                    break;
             }
-
+            
             const results = calculateResults(revenueBrutHT, totalDays);
-
+            
+            // Mise à jour de l'affichage
             document.getElementById('resultRevenueBrut').textContent = formatCurrency(results.revenueBrut);
             document.getElementById('resultVAT').textContent = formatCurrency(results.vat);
             document.getElementById('resultCAHT').textContent = formatCurrency(results.caHT);
@@ -700,19 +1079,27 @@
             document.getElementById('resultRevenusImposables').textContent = formatCurrency(results.revenusImposables);
             document.getElementById('resultImpot').textContent = formatCurrency(results.impot);
             document.getElementById('resultNetApresIR').textContent = formatCurrency(results.netApresIR);
-
+            
+            // Calculs avancés
             if (calculsAvancesEnabled.checked) {
                 document.getElementById('resultProvisionConges').textContent = formatCurrency(results.provisionConges);
                 document.getElementById('resultEpargneRetraite').textContent = formatCurrency(results.epargneRetraite);
                 document.getElementById('resultNetApresProvisions').textContent = formatCurrency(results.netApresProvisions);
             }
-
-            document.getElementById('displaySourceRate').textContent = formatPercentage(parseFloat(sourceRate.value)/100);
+            
+            // Affichage des paramètres fiscaux
+            document.getElementById('displaySourceRate').textContent = formatPercentage(parseFloat(sourceRate.value) / 100);
             document.getElementById('displayFiscalParts').textContent = fiscalParts.value;
-
+            
+            // Affichage/masquage de la TVA
             const vatResult = document.getElementById('vatResult');
-            if (vatEnabled.checked) vatResult.style.display = 'flex'; else vatResult.style.display = 'none';
-
+            if (vatEnabled.checked) {
+                vatResult.style.display = 'flex';
+            } else {
+                vatResult.style.display = 'none';
+            }
+            
+            // Résultats mensuels (si > 21 jours facturés)
             const monthlyResults = document.getElementById('monthlyResults');
             if (totalDays && totalDays > 21) {
                 monthlyResults.classList.remove('hidden');
@@ -721,21 +1108,23 @@
             } else {
                 monthlyResults.classList.add('hidden');
             }
-
+            
+            // Mise à jour des charges déductibles et alertes
             updateChargesDeductiblesDisplay();
             updateAlerts(results);
         }
 
         function resetForm() {
-            calculationMode.value = 'mission';
-            tjm.value = '650';
+            // Reset all inputs to default values (requested defaults)
+            calculationMode.value = 'mission'; // Mode par défaut : mission ponctuelle
+            tjm.value = '650'; // TJM par défaut demandé
             netAnnualTarget.value = '50000';
             daysPerYear.value = '200';
             daysPerWeek.value = '3';
             totalDays.value = '60';
             fiscalParts.value = '2.5';
             sourceRate.value = '13';
-            vatEnabled.checked = false;
+            vatEnabled.checked = false; // TVA désactivée par défaut (affiche TJM HT 650€)
             fraisReelsAmount.value = '5000';
             chargesDeductiblesEnabled.checked = false;
             calculsAvancesEnabled.checked = false;
@@ -747,10 +1136,10 @@
             abattement.checked = true;
             fraisReels.checked = false;
             missionByWeek.checked = false;
-            missionByTotal.checked = true;
+            missionByTotal.checked = true; // Type de mission par défaut : total de jours
             missionMonths.value = '1';
-            weeksPerMonth.value = '4.333';
 
+            // Update visibility and calculations
             updateVisibilityBasedOnMode();
             updateMissionType();
             updateIRCalculation();
@@ -760,24 +1149,54 @@
             updateResults();
         }
 
-        // listeners
-        calculationMode.addEventListener('change', () => { updateVisibilityBasedOnMode(); updateResults(); });
-
-        [tjm, netAnnualTarget, daysPerYear, daysPerWeek, totalDays, fiscalParts, sourceRate, fraisReelsAmount,
-         fraisFormation, materielInfo, fraisDeplacementKm, abonnementsLogiciels, fraisBureau, missionMonths, weeksPerMonth].forEach(el=>{
-            el.addEventListener('input', updateResults);
+        // Event listeners
+        calculationMode.addEventListener('change', () => {
+            updateVisibilityBasedOnMode();
+            updateResults();
         });
 
-        vatEnabled.addEventListener('change', ()=>{ updateTJMLabel(); updateResults(); });
-        chargesDeductiblesEnabled.addEventListener('change', ()=>{ updateChargesDeductiblesVisibility(); updateResults(); });
-        calculsAvancesEnabled.addEventListener('change', ()=>{ updateCalculsAvancesVisibility(); updateResults(); });
+        // Inputs numériques
+        [tjm, netAnnualTarget, daysPerYear, daysPerWeek, totalDays, fiscalParts, sourceRate, fraisReelsAmount,
+         fraisFormation, materielInfo, fraisDeplacementKm, abonnementsLogiciels, fraisBureau, missionMonths].forEach(input => {
+            input.addEventListener('input', updateResults);
+        });
 
-        [abattement, fraisReels].forEach(r => r.addEventListener('change', ()=>{ updateIRCalculation(); updateResults(); }));
-        [missionByWeek, missionByTotal].forEach(r => r.addEventListener('change', ()=>{ updateMissionType(); updateResults(); }));
+        // Switches et radio buttons
+        vatEnabled.addEventListener('change', () => {
+            updateTJMLabel();
+            updateResults();
+        });
+        
+        chargesDeductiblesEnabled.addEventListener('change', () => {
+            updateChargesDeductiblesVisibility();
+            updateResults();
+        });
+        
+        calculsAvancesEnabled.addEventListener('change', () => {
+            updateCalculsAvancesVisibility();
+            updateResults();
+        });
+        
+        [abattement, fraisReels].forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateIRCalculation();
+                updateResults();
+            });
+        });
 
-        resetButton.addEventListener('click', (e)=>{ e.preventDefault(); resetForm(); });
+        [missionByWeek, missionByTotal].forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateMissionType();
+                updateResults();
+            });
+        });
 
-        // init
+        resetButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetForm();
+        });
+
+        // Initialisation : on applique les valeurs par défaut demandées
         resetForm();
     </script>
 </body>
